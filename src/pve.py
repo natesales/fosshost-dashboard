@@ -6,8 +6,6 @@ import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 import terminal
-import ipam
-
 
 class PVEError(Exception):
     def __init__(self, *args):
