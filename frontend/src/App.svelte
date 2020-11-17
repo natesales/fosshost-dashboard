@@ -21,9 +21,9 @@
 </script>
 
 <main>
-    {#if $Page == "login"}
+    {#if $Page === "login"}
         <Login/>
-    {:else if $Page == "register"}
+    {:else if $Page === "register"}
         <Register/>
     {:else}
         <div class="wrapper">
