@@ -1,4 +1,5 @@
 <script>
+    import { Page } from "../stores.js";
     export let projectName;
 </script>
 
@@ -31,23 +32,17 @@
                                 aria-haspopup="true"
                                 class="nav-link"
                                 data-toggle="dropdown"
-                                href="javascript:"
-                                id="navbarDropdownProfile">
+                                id="navbarDropdownProfile"
+                        >
                             <i class="material-icons">person</i>
                             <p class="d-lg-none d-md-block">
                                 Account
                             </p>
                         </a>
-                        <div
-                                aria-labelledby="navbarDropdownProfile"
-                                class="dropdown-menu dropdown-menu-right">
-                            <a
-                                    class="dropdown-item"
-                                    href="/profile">Profile</a>
+                        <div aria-labelledby="navbarDropdownProfile" class="dropdown-menu dropdown-menu-right">
+                            <a class="dropdown-item" on:click={() => {$Page = "profile"}}>Profile</a>
                             <div class="dropdown-divider"></div>
-                            <a
-                                    class="dropdown-item"
-                                    href="/logout">Log out</a>
+                            <a class="dropdown-item" on:click={() => {$Page = "login"}}>Log out</a>
                         </div>
                     </li>
                 </ul>
