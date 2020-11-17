@@ -1,23 +1,8 @@
 <script>
     import {Page} from "../stores.js";
-    import {addSnackbar} from "../utils.js";
-    import {onMount} from "svelte";
+    import {addSnackbar, checkLogin} from "../utils.js";
 
     let email, password;
-
-
-    // Check if we're already logged in
-    onMount(() => {
-        fetch("/api/auth/check", {
-            credentials: "include"
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data["success"]) {
-                    $Page = "dashboard"
-                }
-            })
-    })
 
     function submit() {
         fetch("/api/login", {
@@ -33,6 +18,7 @@
             .then(response => response.json())
             .then(data => {
                 if (data["success"]) {
+                    checkLogin($Page)
                     $Page = "dashboard"
                 } else {
                     addSnackbar("Error", data["message"], data["success"] ? "green" : "red")

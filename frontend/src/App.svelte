@@ -3,21 +3,33 @@
     import Navbar from "./components/Navbar.svelte";
     import Footer from "./components/Footer.svelte";
     import Profile from "./components/Profile.svelte";
-    import {Page} from "./stores.js";
+    import {Page, Project} from "./stores.js";
     import RequestForm from "./components/RequestForm.svelte";
     import Dashboard from "./components/Dashboard.svelte";
     import Login from "./components/Login.svelte";
     import Register from "./components/Register.svelte";
     import SnackbarGroup from "./components/SnackbarGroup.svelte";
+    import {onMount} from "svelte";
+    import Spinner from "./components/Spinner.svelte";
+    import {checkLogin} from "./utils";
 
     // Set title
     $: {
         document.title = $Page.charAt(0).toUpperCase() + $Page.slice(1) + " | FOSSHOST"
     }
+
+    onMount(() => checkLogin())
+
+    $: checkLogin($Page)
 </script>
 
 <main>
-    {#if $Page === "login"}
+    {#if $Page === "index"}
+        <div class="index-container">
+            <img src="/static/assets/img/logo-dark.png" width="15%"/>
+            <Spinner/>
+        </div>
+    {:else if $Page === "login"}
         <Login/>
     {:else if $Page === "register"}
         <Register/>
@@ -50,5 +62,12 @@
         width: 100%;
         height: 100%;
         margin: 0;
+    }
+
+    .index-container {
+        margin-top: 50px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
     }
 </style>

@@ -1,17 +1,6 @@
 <script>
     import StatBoxes from "./StatBoxes.svelte";
     import {Page} from "../stores.js";
-    import {onMount} from "svelte";
-
-    function loadVms() {
-        fetch("/virt/list", {
-            credentials: "include"
-        })
-        .then(response => response.json())
-        .then(data => console.log(data))
-    }
-
-    onMount(() => loadVms())
 </script>
 
 <main>
@@ -65,7 +54,7 @@
                                         value="Stop"/>
                                 <input
                                         class="control-button button-blue"
-                                        onclick={loadVms()}
+                                        onclick=""
                                         type="button"
                                         value="Console"/>
                             </td>

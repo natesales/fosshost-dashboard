@@ -1,16 +1,12 @@
 <script>
-    import {Page} from "../stores.js";
-
-    export let projectName;
+    import {Page, Project} from "../stores.js";
 
     function logOut() {
         fetch("/api/auth/logout", {
             credentials: "include"
         })
         .then(response => response.json())
-        .then(data => {
-            $Page = "login"
-        })
+        .then(data => $Page = "index")
     }
 </script>
 
@@ -19,7 +15,7 @@
         <div class="container-fluid">
             <div class="navbar-wrapper">
                 <p class="navbar-brand">
-                    Welcome to Fosshost, <span class="color-red">{ projectName }</span>!
+                    Welcome to Fosshost, <span style="text-decoration: none; cursor: default" class="color-red">{ $Project["name"] }</span>!
                 </p>
             </div>
             <button
