@@ -1,6 +1,17 @@
 <script>
-    import { Page } from "../stores.js";
+    import {Page} from "../stores.js";
+
     export let projectName;
+
+    function logOut() {
+        fetch("/api/auth/logout", {
+            credentials: "include"
+        })
+        .then(response => response.json())
+        .then(data => {
+            $Page = "login"
+        })
+    }
 </script>
 
 <main>
@@ -42,7 +53,7 @@
                         <div aria-labelledby="navbarDropdownProfile" class="dropdown-menu dropdown-menu-right">
                             <a class="dropdown-item" on:click={() => {$Page = "profile"}}>Profile</a>
                             <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" on:click={() => {$Page = "login"}}>Log out</a>
+                            <a class="dropdown-item" on:click={() => logOut()}>Log out</a>
                         </div>
                     </li>
                 </ul>

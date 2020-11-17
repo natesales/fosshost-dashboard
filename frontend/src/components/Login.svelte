@@ -1,8 +1,23 @@
 <script>
-    import { Page } from "../stores.js";
-    import { addSnackbar } from "../utils.js";
+    import {Page} from "../stores.js";
+    import {addSnackbar} from "../utils.js";
+    import {onMount} from "svelte";
 
     let email, password;
+
+
+    // Check if we're already logged in
+    onMount(() => {
+        fetch("/api/auth/check", {
+            credentials: "include"
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data["success"]) {
+                    $Page = "dashboard"
+                }
+            })
+    })
 
     function submit() {
         fetch("/api/login", {
@@ -15,14 +30,15 @@
                 password: password
             })
         })
-        .then(response => response.json())
-        .then(data => {
-            addSnackbar("FOSSHOST", data["message"], data["success"] ? "green" : "red")
-            if (data["success"]) {
-                $Page = "dashboard"
-            }
-        })
-        .catch(error => alert("Server error: " + error))
+            .then(response => response.json())
+            .then(data => {
+                if (data["success"]) {
+                    $Page = "dashboard"
+                } else {
+                    addSnackbar("Error", data["message"], data["success"] ? "green" : "red")
+                }
+            })
+            .catch(error => alert("Server error: " + error))
     }
 </script>
 
@@ -37,7 +53,7 @@
                         <div class="col-md-12">
                             <div class="form-group bmd-form-group">
                                 <label class="bmd-label-floating">Email</label>
-                                <input class="form-control red-banner" type="text" bind:value={email}>
+                                <input bind:value={email} class="form-control red-banner" type="text">
                             </div>
                         </div>
                     </div>
@@ -45,7 +61,7 @@
                         <div class="col-md-12">
                             <div class="form-group bmd-form-group">
                                 <label class="bmd-label-floating">Password</label>
-                                <input class="form-control red-banner" type="password" bind:value={password}>
+                                <input bind:value={password} class="form-control red-banner" type="password">
                             </div>
                         </div>
                     </div>

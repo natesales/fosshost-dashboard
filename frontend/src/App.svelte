@@ -10,14 +10,10 @@
     import Register from "./components/Register.svelte";
     import SnackbarGroup from "./components/SnackbarGroup.svelte";
 
-    // const urlParams = new URLSearchParams(window.location.search);
-    // export let page = urlParams.get("page") ? urlParams.get("page") : "dashboard"
-
     // Set title
     $: {
         document.title = $Page.charAt(0).toUpperCase() + $Page.slice(1) + " | FOSSHOST"
     }
-
 </script>
 
 <main>
