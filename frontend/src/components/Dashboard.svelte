@@ -20,7 +20,7 @@
             .then(data => {
                 vms = data["results"]
                 for (const vm in vms) {
-                    locations.add(vms[vm]["cluster"]["value"])
+                    locations.add(vms[vm]["cluster"]["name"])
                 }
             })
             .catch(error => alert("Server error: " + error))
