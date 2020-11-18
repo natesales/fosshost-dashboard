@@ -1,3 +1,34 @@
+<script>
+    import {addSnackbar} from "../utils";
+
+    let service = "VPS"
+    let message = ""
+
+    function submitRequest() {
+        if (message === "") {
+            addSnackbar("Request", "Message must not be blank", "red")
+            return
+        }
+
+        fetch("/api/request", {
+            credentials: "include",
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                service: service,
+                message: message
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                addSnackbar("Request", data["message"], data["success"] ? "green" : "red")
+            })
+            .catch(error => alert("Server error: " + error))
+    }
+</script>
+
 <main>
     <div class="col-md-8">
         <div class="card">
@@ -6,12 +37,12 @@
                 <p class="card-category">Submit a request for new infrastructure</p>
             </div>
             <div class="card-body danger">
-                <form>
+                <div class="form">
                     <div class="row">
                         <div class="col-md-12">
                             <div class="form-group bmd-form-group">
                                 <label class="bmd-label-static">Service</label>
-                                <select class="form-control">
+                                <select class="form-control" value={service}>
                                     <option value="vps">VPS</option>
                                     <option value="domain">Domain</option>
                                     <option value="other">Other</option>
@@ -25,14 +56,14 @@
                                 <label>More Information</label>
                                 <div class="form-group bmd-form-group">
                                     <label class="bmd-label-floating">More information about this request...</label>
-                                    <textarea class="form-control red-banner" rows="6"></textarea>
+                                    <textarea value={message} class="form-control red-banner" rows="6"></textarea>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <button class="btn btn-primary pull-right red-button" type="submit">Submit</button>
+                    <button class="btn btn-primary pull-right red-button" on:click={() => submitRequest()} type="submit">Submit</button>
                     <div class="clearfix"></div>
-                </form>
+                </div>
             </div>
         </div>
     </div>
