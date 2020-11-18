@@ -22,6 +22,10 @@ with open("templates/infra_request.j2") as infra_request_template_file:
     infra_request_template = Template(infra_request_template_file.read())
 
 
+with open("templates/deprovisioning_request.j2") as deprovisioning_request_template_file:
+    deprovisioning_request_template = Template(deprovisioning_request_template_file.read())
+
+
 def get_args(*args):
     # Parse the request's JSON payload and return as a tuple of arguments.
 
@@ -166,7 +170,7 @@ def virt_deprovision(project):
     except ValueError as e:
         return jsonify({"success": False, "message": str(e)})
 
-    # TODO: Send email
+    send_email(["nate@fosshost.org"], "[FOSSHOST] Deprovisioning Request", deprovisioning_request_template.render(name=project["name"], hypervisor=hypervisor, hostname=hostname))
     return jsonify({"success": True, "message": f"Deprovisioning {hostname} on {hypervisor}. Please allow 24-48 hours for us to review your request."})
 
 
