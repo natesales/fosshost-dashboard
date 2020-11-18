@@ -1,6 +1,51 @@
 <script>
     import StatBoxes from "./StatBoxes.svelte";
-    import {Page} from "../stores.js";
+    import {Counters, Page} from "../stores.js";
+    import {onMount} from "svelte";
+    import {addSnackbar} from "../utils.js";
+
+    let vms = [];
+    let locations = new Set();
+
+    $: {
+        $Counters.vms = vms.length;
+        $Counters.locations = locations.size
+    }
+
+    function loadVms() {
+        fetch("/api/virt/list", {
+            credentials: "include"
+        })
+            .then(response => response.json())
+            .then(data => {
+                vms = data["results"]
+                for (const vm in vms) {
+                    locations.add(vms[vm]["cluster"]["value"])
+                }
+            })
+            .catch(error => alert("Server error: " + error))
+    }
+
+    function deprovision(hostname, hypervisor) {
+        fetch("/api/virt/deprovision", {
+            credentials: "include",
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                hostname: hostname,
+                hypervisor: hypervisor
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                addSnackbar("Deprovision", data["message"], data["success"] ? "green" : "red")
+            })
+            .catch(error => alert("Server error: " + error))
+    }
+
+    onMount(() => loadVms())
 </script>
 
 <main>
@@ -24,41 +69,34 @@
                             <th>Status</th>
                             <th>Addresses</th>
                             <th>Resources</th>
-                            <th>Location</th>
+                            <th>Hypervisor</th>
                             <th>Control</th>
                         </tr>
                         </thead>
                         <tbody>
-                        <tr>
-                            <td>test-machine.fosshost.org</td>
-                            <td><i class="material-icons color-green">done</i></td>
-                            <td>192.168.0.25<br/>2001:db8::1</td>
-                            <td>
-                                4 Cores / 4GB RAM /
-                                100GB Disk / Debian
-                                10.5.0
-                            </td>
-                            <td>
-                                <img alt="Country Icon" class="padding-right" src="https://www.countryflags.io/gb/flat/32.png"/>LAX1
-                            </td>
-                            <td>
-                                <input
-                                        class="control-button button-green"
-                                        onclick="alert('Starting')"
-                                        type="button"
-                                        value="Start"/>
-                                <input
-                                        class="control-button button-red"
-                                        onclick="alert('Stop')"
-                                        type="button"
-                                        value="Stop"/>
-                                <input
-                                        class="control-button button-blue"
-                                        onclick=""
-                                        type="button"
-                                        value="Console"/>
-                            </td>
-                        </tr>
+
+                        {#each vms as vm}
+                            <tr>
+                                <td>{ vm["name"] }</td>
+                                <td>
+                                    {#if vm["status"]["value"] === "active"}
+                                        <i class="material-icons color-green">done</i>
+                                    {:else}
+                                        {vm["status"]["label"]}
+                                    {/if}
+                                </td>
+                                <td>{vm["primary_ip4"]["address"]}<br/>{vm["primary_ip6"]["address"]}</td>
+                                <td>
+                                    {vm["vcpus"]} vCPU{vm["vcpus"] > 1 ? "s" : ""} / {vm["memory"] / 1000}GB RAM / { vm["disk"] }GB Disk
+                                </td>
+                                <td>{vm["cluster"]["name"]}</td>
+                                <td>
+                                    <input class="control-button button-blue" onclick="alert('This would open the console')" type="button" value="Console"/>
+                                    <button class="control-button button-red" on:click={deprovision(vm["name"], vm["cluster"]["name"])}>Deprovision</button>
+                                </td>
+                            </tr>
+                        {/each}
+
                         </tbody>
                     </table>
                 </div>
