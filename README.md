@@ -7,6 +7,7 @@ Infrastructure management portal for https://fosshost.org/
 - FHDASH_SMTP_USER
 - FHDASH_SMTP_PASSWORD
 - FHDASH_SMTP_SERVER
+- FHDASH_HELPY_URI
 
 #### Roadmap
 - SSH Key management

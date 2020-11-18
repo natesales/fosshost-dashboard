@@ -1,3 +1,4 @@
+import json
 from email.mime.text import MIMEText
 from functools import wraps
 from os import environ
@@ -7,7 +8,6 @@ import requests
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 from flask import Flask, request, jsonify, make_response
-from jinja2 import Template
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 from netboxapi import NetboxClient
@@ -19,15 +19,6 @@ argon = PasswordHasher()
 app = Flask(__name__)
 
 netbox = NetboxClient(environ["FHDASH_NETBOX_URL"], environ["FHDASH_NETBOX_TOKEN"], verify=False)
-
-with open("templates/application_submitted.j2") as application_submitted_template_file:
-    application_submitted_template = Template(application_submitted_template_file.read())
-
-with open("templates/infra_request.j2") as infra_request_template_file:
-    infra_request_template = Template(infra_request_template_file.read())
-
-with open("templates/deprovisioning_request.j2") as deprovisioning_request_template_file:
-    deprovisioning_request_template = Template(deprovisioning_request_template_file.read())
 
 
 def get_args(*args):
@@ -87,6 +78,24 @@ def send_email(to, subject, body):
     print("Sent")
 
 
+def create_ticket(name, email, subject, body):
+    print("Sending " + body + " to " + email)
+    r = requests.post(environ["FHDASH_HELPY_URI"], data='data=' + json.dumps({
+        "message": {
+            "kind": "ticket",
+            "subject": subject,
+            "body": body,
+            "channel": "web"
+        },
+        "customer": {
+            "emailAddress": email,
+            "company": name
+        }
+    }))
+
+    print(r.text)
+
+
 @app.route("/register", methods=["POST"])
 def register():
     try:
@@ -97,10 +106,10 @@ def register():
     # Add the project to netbox
     response = netbox.add_project(name, url, email, nick, argon.hash(password), message, "pending")
 
-    print(response.status_code)
     if str(response.status_code)[0] == "2":  # HTTP 2xx
-        send_email(["nate@fosshost.org"], f"[FOSSHOST] Infrastructure Request ({name})", application_submitted_template.render(name=name, email=email, nick=nick, message=message))
+        send_email("support@fosshost.org", f"({name}) Account Request", f"Name: {name}\nURL: {url}\nEmail: {email}\nNick: {nick}\nMessage: {message}")
         return jsonify({"success": True, "message": "Your account has been registered. Please allow 24-48 hours for your request to be processed."})
+
     else:
         return jsonify({"success": False, "message": str(response.json())})
 
@@ -190,7 +199,7 @@ def virt_deprovision(project):
     except ValueError as e:
         return jsonify({"success": False, "message": str(e)})
 
-    send_email(["nate@fosshost.org"], f"[FOSSHOST] Deprovisioning Request ({project['name']})", deprovisioning_request_template.render(name=project["name"], hypervisor=hypervisor, hostname=hostname))
+    create_ticket(project["name"], project["email"], f"({project['name']}) Deprovisioning Request", f"Hostname: {hostname}\nHypervisor: {hypervisor}")
     return jsonify({"success": True, "message": f"Your deprovisioning request has been received. Please allow 24-48 hours for us to review your request."})
 
 
@@ -205,7 +214,8 @@ def infra_request(project):
     if not project.get("ssh-keys") or len(project.get("ssh-keys")) == 0:
         return jsonify({"success": False, "message": "Please add an SSH key to your account before requesting infrastructure. Click the 'Profile and Security' tab on the left side to add one!"})
 
-    send_email(["nate@fosshost.org"], f"[FOSSHOST] Infrastructure Request ({project['name']})", infra_request_template.render(name=project["name"], service=service, message=message))
+    print(message)
+    create_ticket(project["name"], project["email"], f"({project['name']}) Infrastructure Request", f"Service: {service}\nMessage: {message}")
     return jsonify({"success": True, "message": f"Your infrastructure request has been received. Please allow 24-48 hours for us to review your request."})
 
 
