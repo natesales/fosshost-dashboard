@@ -1,13 +1,6 @@
 <script>
     import {Page, Project} from "../stores.js";
-
-    function logOut() {
-        fetch("/api/auth/logout", {
-            credentials: "include"
-        })
-        .then(response => response.json())
-        .then(data => $Page = "index")
-    }
+    import {logOut} from "../utils";
 </script>
 
 <main>
@@ -15,7 +8,7 @@
         <div class="container-fluid">
             <div class="navbar-wrapper">
                 <p class="navbar-brand">
-                    Welcome to Fosshost, <span style="text-decoration: none; cursor: default" class="color-red">{ $Project["name"] }</span>!
+                    Welcome to Fosshost, <span class="color-red" style="text-decoration: none; cursor: default">{ $Project["name"] }</span>!
                 </p>
             </div>
             <button

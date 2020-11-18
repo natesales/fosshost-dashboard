@@ -1,3 +1,28 @@
+<script>
+    import {addSnackbar, checkLogin} from "../utils";
+
+    let password, password_repeat = "";
+
+    function submitChange() {
+        if (password !== password_repeat) {
+            alert("Passwords don't match!")
+        } else {
+            fetch("/api/auth/change", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    password: password
+                })
+            })
+                .then(response => response.json())
+                .then(data => addSnackbar("Profile", data["message"], data["success"] ? "green" : "red"))
+                .catch(error => alert("Server error: " + error))
+        }
+    }
+</script>
+
 <main>
     <div class="col-md-7">
         <div class="card">
@@ -6,38 +31,24 @@
                 <p class="card-category">Modify your account and project settings</p>
             </div>
             <div class="card-body danger">
-                <form>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group bmd-form-group">
-                                <label class="bmd-label-floating">Email</label>
-                                <input class="form-control red-banner" type="password">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group bmd-form-group">
-                                <label class="bmd-label-floating">IRC Nick (freenode)</label>
-                                <input class="form-control red-banner" type="password">
-                            </div>
-                        </div>
-                    </div>
+                <div>
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group bmd-form-group">
                                 <label class="bmd-label-floating">Password</label>
-                                <input class="form-control red-banner" type="password">
+                                <input class="form-control red-banner" type="password" bind:value={password}>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group bmd-form-group">
                                 <label class="bmd-label-floating">Password (repeat)</label>
-                                <input class="form-control red-banner" type="password">
+                                <input class="form-control red-banner" type="password" bind:value={password_repeat}>
                             </div>
                         </div>
                     </div>
-                    <button class="btn btn-primary pull-right red-button" type="submit">Submit</button>
+                    <button class="btn btn-primary pull-right red-button" on:click={() => submitChange()} type="submit">Submit</button>
                     <div class="clearfix"></div>
-                </form>
+                </div>
             </div>
         </div>
     </div>

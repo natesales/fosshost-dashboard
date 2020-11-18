@@ -22,3 +22,11 @@ export function checkLogin(page) {
             })
     }
 }
+
+export function logOut() {
+    fetch("/api/auth/logout", {
+        credentials: "include"
+    })
+        .then(response => response.json())
+        .then(data => Page.set("index"))
+}

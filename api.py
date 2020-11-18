@@ -116,6 +116,19 @@ def auth_logout():
     return resp
 
 
+@app.route("/auth/change", methods=["POST"])
+@auth_required
+def auth_change(project):
+    try:
+        password = get_args("password")
+    except ValueError as e:
+        return jsonify({"success": False, "message": str(e)})
+
+    print(netbox.change_password(project, argon.hash(password)).json())
+
+    return jsonify({"success": True, "message": f"Password updated"})
+
+
 @app.route("/virt/list")
 @auth_required
 def virt_list(project):

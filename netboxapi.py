@@ -26,6 +26,11 @@ class NetboxClient:
             data = {}
         return requests.post(self.host + route, headers=self.headers, verify=self.verify, json=data)
 
+    def _patch(self, route, data=None):
+        if data is None:
+            data = {}
+        return requests.patch(self.host + route, headers=self.headers, verify=self.verify, json=data)
+
     # Main
 
     def add_project(self, name, url, email, nick, password, message, status):
@@ -50,8 +55,24 @@ class NetboxClient:
             if project_data[k] == v:
                 project_data["name"] = project["name"]
                 project_data["slug"] = project["slug"]
+                project_data["id"] = project["id"]
                 return project_data
         return None
 
+    def change_password(self, project, password):
+        _id = str(project["id"])
+        _name = str(project["name"])
+        _slug = str(project["slug"])
+        del project["id"]
+        del project["name"]
+        del project["slug"]
+        project["password"] = password
+
+        return self._patch("tenancy/tenants/" + _id + "/", data={
+            "name": _name,
+            "slug": _slug,
+            "comments": json.dumps(project)
+        })
+
     def list_vms(self):
-        return self._get("virtualization/virtual-machines/?tenant=delivrdev").json()
+        return self._get("virtualization/virtual-machines/?tenant=delivrdev").json()  # TODO tenant selection

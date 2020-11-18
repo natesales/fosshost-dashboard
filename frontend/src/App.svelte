@@ -11,7 +11,7 @@
     import SnackbarGroup from "./components/SnackbarGroup.svelte";
     import {onMount} from "svelte";
     import Spinner from "./components/Spinner.svelte";
-    import {checkLogin} from "./utils";
+    import {checkLogin, logOut} from "./utils";
 
     // Set title
     $: {
@@ -24,7 +24,12 @@
 
     // Show help message after 4 seconds
     let showHelp = false
-    setTimeout(() => {showHelp = true}, 4000)
+    setTimeout(() => {
+        if ($Page === "index") {
+            showHelp = true
+            logOut();
+        }
+    }, 4000)
 </script>
 
 <main>
