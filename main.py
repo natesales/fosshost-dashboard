@@ -108,7 +108,7 @@ def register():
     response = netbox.add_project(name, url, email, nick, argon.hash(password), message, "pending")
 
     if str(response.status_code)[0] == "2":  # HTTP 2xx
-        create_ticket(name, email, f"({name}) Account Request", f"Name: {name}\nURL: {url}\nEmail: {email}\nNick: {nick}\nMessage: {message}")
+        create_ticket(name, email, f"({name}) Account Request", f"Name: {name}\nURL: {url}\nEmail: {email}\nNick: {nick}\nMessage: {message}\nTo process this request, visit the project netbox link:{environ['FHDASH_NETBOX_PUBLIC'] + response.json()['slug']}")
         return jsonify({"success": True, "message": "Your account has been registered. Please allow 24-48 hours for your request to be processed."})
 
     else:
