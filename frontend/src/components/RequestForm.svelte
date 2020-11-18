@@ -2,10 +2,10 @@
     import {addSnackbar} from "../utils";
 
     let service = "VPS"
-    let message = ""
+    let message;
 
     function submitRequest() {
-        if (message === "") {
+        if (!message) {
             addSnackbar("Request", "Message must not be blank", "red")
             return
         }
@@ -56,7 +56,7 @@
                                 <label>More Information</label>
                                 <div class="form-group bmd-form-group">
                                     <label class="bmd-label-floating">More information about this request...</label>
-                                    <textarea value={message} class="form-control red-banner" rows="6"></textarea>
+                                    <textarea bind:value={message} class="form-control red-banner" rows="6"></textarea>
                                 </div>
                             </div>
                         </div>
