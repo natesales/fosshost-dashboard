@@ -63,7 +63,7 @@
                         <div class="col-md-12">
                             <div class="form-group bmd-form-group">
                                 <label class="bmd-label-floating">Email</label>
-                                <input class="form-control red-banner" type="text" bind:value={email}>
+                                <input class="form-control red-banner" type="email" bind:value={email}>
                             </div>
                         </div>
                     </div>
