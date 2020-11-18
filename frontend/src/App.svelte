@@ -21,6 +21,10 @@
     onMount(() => checkLogin())
 
     $: checkLogin($Page)
+
+    // Show help message after 4 seconds
+    let showHelp = false
+    setTimeout(() => {showHelp = true}, 4000)
 </script>
 
 <main>
@@ -28,6 +32,9 @@
         <div class="index-container">
             <img src="/static/assets/img/logo-dark.png" width="15%"/>
             <Spinner/>
+            {#if showHelp}
+                <p>Having trouble? Check our <a href="https://status.fosshost.org">statuspage</a> or <a href="https://fosshost.org/contact">contact</a> us.</p>
+            {/if}
         </div>
     {:else if $Page === "login"}
         <Login/>
