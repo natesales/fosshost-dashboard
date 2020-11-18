@@ -65,11 +65,10 @@ def auth_required(f):
     return decorated_function
 
 
-def send_email(to, subject, body, reply_to):
+def send_email(to, subject, body):
     print("Sending email to", to)
 
     msg = MIMEText(body, "plain")
-    msg.add_header("reply-to", reply_to)
     msg["Subject"] = subject
     msg["From"] = environ["FHDASH_SMTP_USER"]
 
@@ -92,7 +91,7 @@ def register():
 
     print(response.status_code)
     if str(response.status_code)[0] == "2":  # HTTP 2xx
-        send_email(["nate@fosshost.org"], "[FOSSHOST] Project Application", email, application_submitted_template.render(name=name, email=email, nick=nick, message=message))
+        send_email(["nate@fosshost.org"], "[FOSSHOST] Project Application", application_submitted_template.render(name=name, email=email, nick=nick, message=message))
         return jsonify({"success": True, "message": "Your account has been registered. Please allow 24-48 hours for your request to be processed."})
     else:
         return jsonify({"success": False, "message": str(response.json())})
@@ -179,7 +178,7 @@ def infra_request(project):
     except ValueError as e:
         return jsonify({"success": False, "message": str(e)})
 
-    send_email(["nate@fosshost.org"], "[FOSSHOST] Infrastructure Request", project["email"], infra_request_template.render(name=project["name"], service=service, message=message))
+    send_email(["nate@fosshost.org"], "[FOSSHOST] Infrastructure Request", infra_request_template.render(name=project["name"], service=service, message=message))
     return jsonify({"success": True, "message": f"{project['name']} requested {service} with {message}. Please allow 24-48 hours for us to review your request."})
 
 
