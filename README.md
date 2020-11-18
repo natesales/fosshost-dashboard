@@ -10,3 +10,6 @@ Infrastructure management portal for https://fosshost.org/
 
 #### Roadmap
 - SSH Key management
+
+#### License
+GNU GPLv3
