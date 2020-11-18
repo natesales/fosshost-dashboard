@@ -10,7 +10,7 @@ from netboxapi import NetboxClient
 argon = PasswordHasher()
 
 app = Flask(__name__)
-netbox = NetboxClient(environ["FHDASH_NETBOX"], environ["FHDASH_NETBOX_TOKEN"], verify=False)
+netbox = NetboxClient(environ["FHDASH_NETBOX_URL"], environ["FHDASH_NETBOX_TOKEN"], verify=False)
 
 
 def get_args(*args):
