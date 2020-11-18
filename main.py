@@ -9,10 +9,15 @@ from flask import Flask, request, jsonify, make_response
 from jinja2 import Template
 
 from netboxapi import NetboxClient
+import requests
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 argon = PasswordHasher()
 
 app = Flask(__name__)
+
 netbox = NetboxClient(environ["FHDASH_NETBOX_URL"], environ["FHDASH_NETBOX_TOKEN"], verify=False)
 
 with open("templates/application_submitted.j2") as application_submitted_template_file:
