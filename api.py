@@ -1,19 +1,17 @@
-from os import urandom
-import base64
-from flask import Flask, request, jsonify
-from pymongo import MongoClient
 from functools import wraps
+from os import environ
 
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
+from flask import Flask, request, jsonify, make_response
 
-app = Flask(__name__)
-db = MongoClient("mongodb://localhost:27017")["fh-dash"]
+from netboxapi import NetboxClient
 
 argon = PasswordHasher()
 
-def get_random_key():
-    return base64.b64encode(urandom(48)).decode().replace("=", "")
+app = Flask(__name__)
+netbox = NetboxClient(environ["FHDASH_NETBOX"], environ["FHDASH_NETBOX_TOKEN"], verify=False)
+
 
 def get_args(*args):
     # Parse the request's JSON payload and return as a tuple of arguments.
@@ -37,6 +35,27 @@ def get_args(*args):
     else:
         return tuple(payload)
 
+
+def auth_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        cookie = request.headers.get("Cookie")
+        if not cookie:
+            return jsonify({"success": False, "message": "Not Authenticated"})
+
+        api_key = request.headers.get("Cookie").split("apikey=")[1]
+
+        project = netbox.find_project("key", api_key)
+        if not project:
+            return jsonify({"success": False, "message": "Not Authenticated"})
+        elif project["status"] != "active":
+            return jsonify({"success": False, "message": "Your account is not active"})
+        else:
+            return f(*args, **kwargs, project=project)
+
+    return decorated_function
+
+
 @app.route("/register", methods=["POST"])
 def register():
     try:
@@ -44,20 +63,16 @@ def register():
     except ValueError as e:
         return jsonify({"success": False, "message": str(e)})
 
-    db["projects"].insert_one({
-        "name": name,
-        "url": url,
-        "email": email,
-        "nick": nick,
-        "password": argon.hash(password),
-        "message": message,
-        "key": get_random_key(),
-        "status": "pending"
-    })
+    # Add the project to netbox
+    response = netbox.add_project(name, url, email, nick, argon.hash(password), message, "pending")
 
-    # TODO: Send email
+    print(response.status_code)
+    if str(response.status_code)[0] == "2":  # HTTP 2xx
+        # TODO: Send email
+        return jsonify({"success": True, "message": "Your account has been registered. Please allow 24-48 hours for your request to be processed."})
+    else:
+        return jsonify({"success": False, "message": str(response.json())})
 
-    return jsonify({"success": True, "message": "Your account has been registered. Please allow 24-48 hours for your request to be processed."})
 
 @app.route("/login", methods=["POST"])
 def login():
@@ -66,22 +81,68 @@ def login():
     except ValueError as e:
         return jsonify({"success": False, "message": str(e)})
 
-    project_doc = db["projects"].find_one({"email": email})
-    if not project_doc:
-        return jsonify({"success": "False", "message": "This user doesn't exist"})
+    project_data = netbox.find_project("email", email)
+    if not project_data:
+        return jsonify({"success": False, "message": "Account not found"})
 
+    # Compare password hash
     try:
-        valid = argon.verify(project_doc["password"], password)
+        valid = argon.verify(project_data["password"], password)
+        if not valid:
+            raise VerifyMismatchError
     except VerifyMismatchError:
         return jsonify({"success": False, "message": "Invalid username or password"})
+
+    if project_data["status"] == "active":
+        resp = make_response(jsonify({"success": True, "message": project_data["key"]}))
+        resp.set_cookie("apikey", project_data["key"])
+        return resp
     else:
-        if valid:
-            if project_doc["status"] == "active":
-                return jsonify({"success": True, "message": project_doc["key"]})
-            else:
-                return jsonify({"success": False, "message": "This account is not active. If you have just submitted your registration, please allow 24-48 hours for account activation. Otherwise, contact us at https://fosshost.org/contact/ for more information."})
-        else:
-            return jsonify({"success": False, "message": "Invalid username or password"})
+        return jsonify({"success": False, "message": "This account is not active. If you have just submitted your registration, please allow 24-48 hours for account activation. Otherwise, contact us at https://fosshost.org/contact/ for more information."})
 
 
-app.run(host="localhost", port=5001)
+@app.route("/auth/check")
+@auth_required
+def auth_check(project):
+    # Check if a user is logged in (the auth_check decorator will return a negative response, so the following is only the authenticated response)
+    return jsonify({"success": True, "message": project})
+
+
+@app.route("/auth/logout")
+def auth_logout():
+    # Log a user out
+    resp = make_response(jsonify({"success": True, "message": "Logged out successfully"}))
+    resp.set_cookie("apikey", "")
+    return resp
+
+
+@app.route("/virt/list")
+@auth_required
+def virt_list(project):
+    return netbox.list_vms()
+
+
+@app.route("/virt/deprovision", methods=["POST"])
+@auth_required
+def virt_deprovision(project):
+    try:
+        hypervisor, hostname = get_args("hypervisor", "hostname")
+    except ValueError as e:
+        return jsonify({"success": False, "message": str(e)})
+
+    # TODO: Send email
+    return jsonify({"success": True, "message": f"Deprovisioning {hostname} on {hypervisor}. Please allow 24-48 hours for us to review your request."})
+
+
+@app.route("/request", methods=["POST"])
+@auth_required
+def infra_request(project):
+    try:
+        service, message = get_args("service", "message")
+    except ValueError as e:
+        return jsonify({"success": False, "message": str(e)})
+
+    return jsonify({"success": True, "message": f"{project['name']} requested {service} with {message}. Please allow 24-48 hours for us to review your request."})
+
+
+app.run(host="localhost", port=5001, debug=True)
