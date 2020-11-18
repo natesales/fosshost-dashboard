@@ -1,7 +1,6 @@
 <script>
     import {addSnackbar, checkLogin} from "../utils";
-    import Spinner from "./Spinner.svelte";
-    import {Page, Project} from "../stores.js";
+    import {Project} from "../stores.js";
 
     let password, password_repeat, key = "";
 
