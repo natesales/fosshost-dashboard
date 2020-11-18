@@ -182,5 +182,5 @@ def infra_request(project):
     send_email(["nate@fosshost.org"], "[FOSSHOST] Infrastructure Request", project["email"], infra_request_template.render(name=project["name"], service=service, message=message))
     return jsonify({"success": True, "message": f"{project['name']} requested {service} with {message}. Please allow 24-48 hours for us to review your request."})
 
-#
-# app.run(host="localhost", port=5001, debug=True)
+
+app.run(host="localhost", port=8084, debug=True)
