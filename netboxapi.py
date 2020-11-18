@@ -76,3 +76,24 @@ class NetboxClient:
 
     def list_vms(self):
         return self._get("virtualization/virtual-machines/?tenant=delivrdev").json()  # TODO tenant selection
+
+    def add_key(self, project, key):
+        _id = str(project["id"])
+        _name = str(project["name"])
+        _slug = str(project["slug"])
+        del project["id"]
+        del project["name"]
+        del project["slug"]
+        if "ssh-keys" in project:
+            project["ssh-keys"].append(key)
+        else:
+            project["ssh-keys"] = [key]
+
+        return self._patch("tenancy/tenants/" + _id + "/", data={
+            "name": _name,
+            "slug": _slug,
+            "comments": json.dumps(project)
+        })
+
+    def list_vms(self):
+        return self._get("virtualization/virtual-machines/?tenant=delivrdev").json()  # TODO tenant selection

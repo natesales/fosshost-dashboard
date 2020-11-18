@@ -3,14 +3,14 @@ from functools import wraps
 from os import environ
 from smtplib import SMTP_SSL as SMTP
 
+import requests
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 from flask import Flask, request, jsonify, make_response
 from jinja2 import Template
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 from netboxapi import NetboxClient
-import requests
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
@@ -26,13 +26,12 @@ with open("templates/application_submitted.j2") as application_submitted_templat
 with open("templates/infra_request.j2") as infra_request_template_file:
     infra_request_template = Template(infra_request_template_file.read())
 
-
 with open("templates/deprovisioning_request.j2") as deprovisioning_request_template_file:
     deprovisioning_request_template = Template(deprovisioning_request_template_file.read())
 
 
 def get_args(*args):
-    # Parse the request's JSON payload and return as a tuple of arguments.
+    # Parse the request's JSON payload and return as a ;tuple of arguments.
 
     if request.json is None:
         # TODO: Replace this function with a decorator that handles this ValueError and returns a correct JSON error response
@@ -156,9 +155,25 @@ def auth_change(project):
     except ValueError as e:
         return jsonify({"success": False, "message": str(e)})
 
-    print(netbox.change_password(project, argon.hash(password)).json())
+    netbox.change_password(project, argon.hash(password))
 
     return jsonify({"success": True, "message": f"Password updated"})
+
+
+@app.route("/auth/add_key", methods=["POST"])
+@auth_required
+def auth_add_key(project):
+    try:
+        key = get_args("key")
+    except ValueError as e:
+        return jsonify({"success": False, "message": str(e)})
+
+    if not (key.startswith("ssh-rsa") or key.startswith("ssh-ed25519")):
+        return jsonify({"success": False, "message": "Invalid SSH key. Keys must be in ssh-rsa or ssh-ed25519 format."})
+
+    netbox.add_key(project, key)
+
+    return jsonify({"success": True, "message": "Your key has been added"})
 
 
 @app.route("/virt/list")
@@ -186,6 +201,9 @@ def infra_request(project):
         service, message = get_args("service", "message")
     except ValueError as e:
         return jsonify({"success": False, "message": str(e)})
+
+    if not project.get("ssh-keys") or len(project.get("ssh-keys")) == 0:
+        return jsonify({"success": False, "message": "Please add an SSH key to your account before requesting infrastructure. Click the 'Profile and Security' tab on the left side to add one!"})
 
     send_email(["nate@fosshost.org"], f"[FOSSHOST] Infrastructure Request ({project['name']})", infra_request_template.render(name=project["name"], service=service, message=message))
     return jsonify({"success": True, "message": f"Your infrastructure request has been received. Please allow 24-48 hours for us to review your request."})
