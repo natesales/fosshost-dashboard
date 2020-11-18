@@ -1,5 +1,10 @@
+<script>
+    export let color = "black"
+    export let padded = true
+</script>
+
 <main>
-    <div class="spinner">
+    <div class="spinner" style="--theme-color: {color}" class:padded>
         <div class="rect1"></div>
         <div class="rect2"></div>
         <div class="rect3"></div>
@@ -9,8 +14,11 @@
 </main>
 
 <style>
+    .padded {
+        margin: 100px;
+    }
+
     .spinner {
-        margin: 100px auto;
         width: 50px;
         height: 40px;
         text-align: center;
@@ -18,7 +26,7 @@
     }
 
     .spinner > div {
-        background-color: #333;
+        background-color: var(--theme-color);
         height: 100%;
         width: 6px;
         display: inline-block;
