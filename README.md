@@ -1,4 +1,7 @@
 # fosshost-dashboard
-VM management for Fosshost
+Infrastructure management portal for https://fosshost.org/
 
-![Screenshot](fosshost.png)
+
+#### Roadmap
+- SSH Key management
+- Docker image
