@@ -179,7 +179,7 @@ def auth_add_key(project):
 @app.route("/virt/list")
 @auth_required
 def virt_list(project):
-    return netbox.list_vms()
+    return netbox.list_vms(project)
 
 
 @app.route("/virt/deprovision", methods=["POST"])

@@ -74,9 +74,6 @@ class NetboxClient:
             "comments": json.dumps(project)
         })
 
-    def list_vms(self):
-        return self._get("virtualization/virtual-machines/?tenant=delivrdev").json()  # TODO tenant selection
-
     def add_key(self, project, key):
         _id = str(project["id"])
         _name = str(project["name"])
@@ -95,5 +92,5 @@ class NetboxClient:
             "comments": json.dumps(project)
         })
 
-    def list_vms(self):
-        return self._get("virtualization/virtual-machines/?tenant=delivrdev").json()  # TODO tenant selection
+    def list_vms(self, project):
+        return self._get("virtualization/virtual-machines/?tenant=" + project["slug"]).json()
