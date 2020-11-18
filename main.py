@@ -95,7 +95,7 @@ def register():
 
     print(response.status_code)
     if str(response.status_code)[0] == "2":  # HTTP 2xx
-        send_email(["nate@fosshost.org"], "[FOSSHOST] Project Application", application_submitted_template.render(name=name, email=email, nick=nick, message=message))
+        send_email(["nate@fosshost.org"], f"[FOSSHOST] Infrastructure Request ({name})", application_submitted_template.render(name=name, email=email, nick=nick, message=message))
         return jsonify({"success": True, "message": "Your account has been registered. Please allow 24-48 hours for your request to be processed."})
     else:
         return jsonify({"success": False, "message": str(response.json())})
@@ -170,8 +170,8 @@ def virt_deprovision(project):
     except ValueError as e:
         return jsonify({"success": False, "message": str(e)})
 
-    send_email(["nate@fosshost.org"], "[FOSSHOST] Deprovisioning Request", deprovisioning_request_template.render(name=project["name"], hypervisor=hypervisor, hostname=hostname))
-    return jsonify({"success": True, "message": f"Deprovisioning {hostname} on {hypervisor}. Please allow 24-48 hours for us to review your request."})
+    send_email(["nate@fosshost.org"], f"[FOSSHOST] Deprovisioning Request ({project['name']})", deprovisioning_request_template.render(name=project["name"], hypervisor=hypervisor, hostname=hostname))
+    return jsonify({"success": True, "message": f"Your deprovisioning request has been received. Please allow 24-48 hours for us to review your request."})
 
 
 @app.route("/request", methods=["POST"])
@@ -182,8 +182,8 @@ def infra_request(project):
     except ValueError as e:
         return jsonify({"success": False, "message": str(e)})
 
-    send_email(["nate@fosshost.org"], "[FOSSHOST] Infrastructure Request", infra_request_template.render(name=project["name"], service=service, message=message))
-    return jsonify({"success": True, "message": f"{project['name']} requested {service} with {message}. Please allow 24-48 hours for us to review your request."})
+    send_email(["nate@fosshost.org"], f"[FOSSHOST] Infrastructure Request ({project['name']})", infra_request_template.render(name=project["name"], service=service, message=message))
+    return jsonify({"success": True, "message": f"Your infrastructure request has been received. Please allow 24-48 hours for us to review your request."})
 
 
 app.run(host="localhost", port=8084, debug=True)
