@@ -1,9 +1,12 @@
+from email.mime.text import MIMEText
 from functools import wraps
 from os import environ
+from smtplib import SMTP_SSL as SMTP
 
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 from flask import Flask, request, jsonify, make_response
+from jinja2 import Template
 
 from netboxapi import NetboxClient
 
@@ -11,6 +14,12 @@ argon = PasswordHasher()
 
 app = Flask(__name__)
 netbox = NetboxClient(environ["FHDASH_NETBOX_URL"], environ["FHDASH_NETBOX_TOKEN"], verify=False)
+
+with open("templates/application_submitted.j2") as application_submitted_template_file:
+    application_submitted_template = Template(application_submitted_template_file.read())
+
+with open("templates/infra_request.j2") as infra_request_template_file:
+    infra_request_template = Template(infra_request_template_file.read())
 
 
 def get_args(*args):
@@ -56,6 +65,21 @@ def auth_required(f):
     return decorated_function
 
 
+def send_email(to, subject, body, reply_to):
+    print("Sending email to", to)
+
+    msg = MIMEText(body, "plain")
+    msg.add_header("reply-to", reply_to)
+    msg["Subject"] = subject
+    msg["From"] = environ["FHDASH_SMTP_USER"]
+
+    server = SMTP(environ["FHDASH_SMTP_SERVER"])
+    server.login(environ["FHDASH_SMTP_USER"], environ["FHDASH_SMTP_PASSWORD"])
+    server.sendmail(environ["FHDASH_SMTP_USER"], to, msg.as_string())
+    server.quit()
+    print("Sent")
+
+
 @app.route("/register", methods=["POST"])
 def register():
     try:
@@ -68,7 +92,7 @@ def register():
 
     print(response.status_code)
     if str(response.status_code)[0] == "2":  # HTTP 2xx
-        # TODO: Send email
+        send_email(["nate@fosshost.org"], "[FOSSHOST] Project Application", email, application_submitted_template.render(name=name, email=email, nick=nick, message=message))
         return jsonify({"success": True, "message": "Your account has been registered. Please allow 24-48 hours for your request to be processed."})
     else:
         return jsonify({"success": False, "message": str(response.json())})
@@ -155,7 +179,8 @@ def infra_request(project):
     except ValueError as e:
         return jsonify({"success": False, "message": str(e)})
 
+    send_email(["nate@fosshost.org"], "[FOSSHOST] Infrastructure Request", project["email"], infra_request_template.render(name=project["name"], service=service, message=message))
     return jsonify({"success": True, "message": f"{project['name']} requested {service} with {message}. Please allow 24-48 hours for us to review your request."})
 
-
-app.run(host="localhost", port=5001, debug=True)
+#
+# app.run(host="localhost", port=5001, debug=True)

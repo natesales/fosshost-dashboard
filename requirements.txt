@@ -1,3 +1,4 @@
 Flask~=1.1.2
 requests~=2.24.0
 argon2-cffi
+Jinja2~=2.11.2
